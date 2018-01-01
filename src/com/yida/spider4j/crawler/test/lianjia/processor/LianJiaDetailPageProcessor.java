@@ -78,12 +78,15 @@ public class LianJiaDetailPageProcessor extends SimpleDetailPageProcessor {
 
         //面积
         double square = 0.00d;
-        String squareStr = page.getHtml(ExpressionType.XPATH).xpath("//div[@class='zf-room']/p[@class='lf']/descendant::i[contains(text(),'面积')]/parent::p[@class='lf']", "text").get();
+        //北京
+        //String squareStr = page.getHtml(ExpressionType.XPATH).xpath("//div[@class='zf-room']/p[@class='lf']/descendant::i[contains(text(),'面积')]/parent::p[@class='lf']", "text").get();
+        //苏州
+        String squareStr = page.getHtml(ExpressionType.XPATH).xpath("//div[@class='area']/div[@class='mainInfo']", "text").get();
         if (StringUtils.isNotEmpty(squareStr)) {
             if (squareStr.indexOf("(") == -1) {
-                squareStr = squareStr.replace("面积：", "").replace("平米", "").trim();
+                squareStr = squareStr.replace("面积：", "").replace("平米", "").replace("平", "").replaceAll("\\s+", "");
             } else {
-                squareStr = squareStr.substring(0, squareStr.indexOf("(")).replace("面积：", "").replace("平米", "").trim();
+                squareStr = squareStr.substring(0, squareStr.indexOf("(")).replace("面积：", "").replace("平米", "").replace("平", "").replaceAll("\\s+", "");
             }
             square = Double.valueOf(squareStr);
         }
