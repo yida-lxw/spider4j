@@ -90,7 +90,8 @@ public class LianJiaStartPageProcessor extends SimpleStartPageProcessor {
     @Override
     public String buildNextPageUrl(Page page, int currentPage, int totalPage,
                                    int pageSize) {
-        return "https://bj.lianjia.com/zufang/pg" + currentPage;
+        return "https://su.lianjia.com/zufang/d" + currentPage;
+        //return "https://bj.lianjia.com/zufang/pg" + currentPage;
     }
 
     /**

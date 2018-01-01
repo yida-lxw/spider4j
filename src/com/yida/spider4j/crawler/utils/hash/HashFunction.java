@@ -1,11 +1,9 @@
 package com.yida.spider4j.crawler.utils.hash;
 
-import java.nio.charset.Charset;
-
-import sun.misc.Hashing;
-
 import com.yida.spider4j.crawler.utils.collection.anno.Beta;
 import com.yida.spider4j.crawler.utils.collection.primitives.Ints;
+
+import java.nio.charset.Charset;
 
 /**
  * A hash function is a collision-averse pure function that maps an arbitrary block of

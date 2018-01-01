@@ -1,10 +1,5 @@
 package com.yida.spider4j.crawler.processor;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.yida.spider4j.crawler.core.Page;
 import com.yida.spider4j.crawler.core.PageType;
 import com.yida.spider4j.crawler.processor.param.MultiPageProcessorParam;
@@ -13,6 +8,11 @@ import com.yida.spider4j.crawler.selector.ExpressionType;
 import com.yida.spider4j.crawler.utils.Constant;
 import com.yida.spider4j.crawler.utils.HttpConstant;
 import com.yida.spider4j.crawler.utils.common.StringUtils;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @ClassName: AbstractMultiPageProcessor
@@ -34,7 +34,7 @@ public abstract class AbstractMultiPageProcessor extends SimplePageProcessor imp
 	 * @Title: determineTotalPage
 	 * @Description: 探测总页数
 	 * @param @param page
-	 * @param pagesize  每页显示大小
+	 * @param pageSize  每页显示大小
 	 * @param @return
 	 * @return int
 	 * @throws

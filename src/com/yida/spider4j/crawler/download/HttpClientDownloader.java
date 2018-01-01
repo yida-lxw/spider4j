@@ -1,61 +1,36 @@
 package com.yida.spider4j.crawler.download;
 
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URLEncoder;
-import java.nio.charset.Charset;
-import java.security.cert.CertificateException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-
-import org.apache.http.Header;
-import org.apache.http.HeaderElement;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
+import com.yida.spider4j.crawler.core.Page;
+import com.yida.spider4j.crawler.core.Request;
+import com.yida.spider4j.crawler.core.Site;
+import com.yida.spider4j.crawler.fetch.HttpStatus;
+import com.yida.spider4j.crawler.selector.PlainText;
+import com.yida.spider4j.crawler.task.Task;
+import com.yida.spider4j.crawler.utils.HttpConstant;
+import com.yida.spider4j.crawler.utils.charset.CharsetDetectorFacade;
+import com.yida.spider4j.crawler.utils.common.GerneralUtils;
+import com.yida.spider4j.crawler.utils.common.StringUtils;
+import com.yida.spider4j.crawler.utils.httpclient.*;
+import com.yida.spider4j.crawler.utils.log.LogUtils;
+import org.apache.http.*;
 import org.apache.http.annotation.ThreadSafe;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.DeflateDecompressingEntity;
 import org.apache.http.client.entity.GzipDecompressingEntity;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpHead;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpTrace;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.client.params.ClientPNames;
 import org.apache.http.client.params.CookiePolicy;
-import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.conn.params.ConnManagerParams;
 import org.apache.http.conn.params.ConnPerRouteBean;
-import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.cookie.Cookie;
-import org.apache.http.entity.BufferedHttpEntity;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.InputStreamEntity;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
-import org.apache.http.impl.client.AbstractHttpClient;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.message.BasicNameValuePair;
@@ -63,24 +38,17 @@ import org.apache.http.params.CoreConnectionPNames;
 import org.apache.http.params.CoreProtocolPNames;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
-import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 
-import com.yida.spider4j.crawler.core.Page;
-import com.yida.spider4j.crawler.core.Request;
-import com.yida.spider4j.crawler.core.Site;
-import com.yida.spider4j.crawler.selector.PlainText;
-import com.yida.spider4j.crawler.task.Task;
-import com.yida.spider4j.crawler.utils.HttpConstant;
-import com.yida.spider4j.crawler.utils.charset.CharsetDetectorFacade;
-import com.yida.spider4j.crawler.utils.common.GerneralUtils;
-import com.yida.spider4j.crawler.utils.common.StringUtils;
-import com.yida.spider4j.crawler.utils.httpclient.HttpClientUtils;
-import com.yida.spider4j.crawler.utils.httpclient.Result;
-import com.yida.spider4j.crawler.utils.httpclient.SocketProxy;
-import com.yida.spider4j.crawler.utils.httpclient.SocksSchemeSocketFactory;
-import com.yida.spider4j.crawler.utils.httpclient.StringEntityHandler;
-import com.yida.spider4j.crawler.utils.log.LogUtils;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import java.io.File;
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.Charset;
+import java.security.cert.CertificateException;
+import java.util.*;
 
 
 /**
@@ -171,14 +139,18 @@ public class HttpClientDownloader extends AbstractDownloader {
             onError(request);
             return null;
 		} finally {
-        	request.putExtra(Request.STATUS_CODE, result.getStatusCode());
-            try {
-                if (result.getHttpEntity() != null) {
-                    // 关闭输入流,释放资源
-                    EntityUtils.consume(result.getHttpEntity());
+            if (null != result) {
+                request.putExtra(Request.STATUS_CODE, result.getStatusCode());
+                try {
+                    if (result.getHttpEntity() != null) {
+                        // 关闭输入流,释放资源
+                        EntityUtils.consume(result.getHttpEntity());
+                    }
+                } catch (IOException e) {
+                    LogUtils.warn("close response fail:\n" + e.getMessage());
                 }
-            } catch (IOException e) {
-            	LogUtils.warn("close response fail:\n" + e.getMessage());
+            } else {
+                request.putExtra(Request.STATUS_CODE, HttpStatus.SERVER_ERROR);
             }
         }
     }

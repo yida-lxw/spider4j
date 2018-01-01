@@ -32,9 +32,10 @@ public class LianJiaSpider {
         DetailPageProcessorParam detailPageProcessorParam = new DetailPageProcessorParam();
         LianJiaDetailPageProcessor detailPageProcessor = new LianJiaDetailPageProcessor(detailPageProcessorParam);
 
-        String startUrl = "https://bj.lianjia.com/zufang";
+        String startUrl = "https://su.lianjia.com/zufang";
 
         DataBasePipeline dataBasePipeline = new DataBasePipeline("houseDB", "rent_house", "lianjiaNO");
+
         Spider.create(startPageProcessor, listPageProcessor, detailPageProcessor).startUrl(startUrl)
                 .addPipeline(new ConsolePipeline())
                 .addPipeline(dataBasePipeline)

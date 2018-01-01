@@ -22,15 +22,32 @@ public class LianJiaDetailPageProcessor extends SimpleDetailPageProcessor {
     @Override
     public void process(Page page) {
         super.process(page);
+        if (null == page || null == page.getHtml()) {
+            return;
+        }
+        if (StringUtils.isNotEmpty(page.getHtml(ExpressionType.JSOUP).jsoup("p[class=errorMessageInfo]").get())) {
+            return;
+        }
         //链家编号
         String lianjiaNO = page.getHtml(ExpressionType.JSOUP).jsoup("div[class=houseRecord] > span[class=houseNum]", "text").get();
         if (StringUtils.isNotEmpty(lianjiaNO)) {
-            lianjiaNO = lianjiaNO.replace("链家编号：", "").replaceAll("\\s+", "");
+            lianjiaNO = lianjiaNO.replace("链家编号：", "").replace("房源编号：", "").replaceAll("\\s+", "");
         }
         page.putField("lianjiaNO", lianjiaNO);
 
         //主标题
-        String mainTitle = page.getHtml(ExpressionType.JSOUP).jsoup("div[class=title] > h1[class=main]", "text").get().trim();
+        String mainTitle = page.getHtml(ExpressionType.JSOUP).jsoup("div[class=content] > div[class=title]> h1[class=main]", "text").get();
+        if (StringUtils.isNotEmpty(mainTitle)) {
+            mainTitle = mainTitle.trim();
+        } else {
+            System.out.println("这个页面有问题：" + page.getRequest().getUrl());
+            try {
+                System.out.println(page.getHtml().getDocument());
+                throw new Exception("哎呀出错啦！");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         page.putField("mainTitle", mainTitle);
 
         //副标题
@@ -41,11 +58,22 @@ public class LianJiaDetailPageProcessor extends SimpleDetailPageProcessor {
         page.putField("subTitle", subTitle);
 
         //租金
-        int rent = Integer.valueOf(page.getHtml(ExpressionType.JSOUP).jsoup("div[class^=price] > span[class=total]", "text").get().replaceAll("\\s+", ""));
+        //北京
+        //int rent = Integer.valueOf(page.getHtml(ExpressionType.JSOUP).jsoup("div[class^=price] > span[class=total]", "text").get().replaceAll("\\s+", ""));
+
+        //苏州
+        int rent = Integer.valueOf(page.getHtml(ExpressionType.JSOUP).jsoup("div[class^=price] > div[class=mainInfo bold]", "text").get()
+                .replaceAll("元/月", "").replaceAll("\\s+", ""));
         page.putField("rent", rent);
 
         //小区
-        String community = page.getHtml(ExpressionType.XPATH).xpath("//div[@class='zf-room']/p/descendant::i[contains(text(),'小区')]/parent::p/a[1]", "text").get();
+        //北京
+        //String community = page.getHtml(ExpressionType.XPATH).xpath("//div[@class='zf-room']/p/descendant::i[contains(text(),'小区')]/parent::p/a[1]", "text").get();
+        //苏州
+        String community = page.getHtml(ExpressionType.XPATH).xpath("//td[@class='title' and contains(text(),'小区')]/following-sibling::td[1]/p[@class='addrEllipsis']/a", "text").get();
+        if (StringUtils.isNotEmpty(community)) {
+            community = community.replace("（", "").replace("）", "");
+        }
         page.putField("community", community);
 
         //面积
@@ -69,43 +97,69 @@ public class LianJiaDetailPageProcessor extends SimpleDetailPageProcessor {
         page.putField("houseType", houseType);
 
         //楼层
-        String floor = page.getHtml(ExpressionType.XPATH).xpath("//div[@class='zf-room']/p[@class='lf']/descendant::i[contains(text(),'楼层')]/parent::p[@class='lf']", "text").get()
+        //北京
+        //String floor = page.getHtml(ExpressionType.XPATH).xpath("//div[@class='zf-room']/p[@class='lf']/descendant::i[contains(text(),'楼层')]/parent::p[@class='lf']", "text").get()
+        //.replace("楼层：", "").replaceAll("\\s+", "");
+        //苏州
+        String floor = page.getHtml(ExpressionType.XPATH).xpath("//td[@class='title' and contains(text(),'楼层')]/following-sibling::td[1]", "text").get()
                 .replace("楼层：", "").replaceAll("\\s+", "");
         page.putField("floor", floor);
 
         //房屋朝向
-        String houseToward = page.getHtml(ExpressionType.XPATH).xpath("//div[@class='zf-room']/p[@class='lf']/descendant::i[contains(text(),'房屋朝向')]/parent::p[@class='lf']", "text").get()
-                .replace("房屋朝向：", "");
+        //北京
+        //String houseToward = page.getHtml(ExpressionType.XPATH).xpath("//div[@class='zf-room']/p[@class='lf']/descendant::i[contains(text(),'房屋朝向')]/parent::p[@class='lf']", "text").get()
+        //.replace("房屋朝向：", "");
+        //苏州
+        String houseToward = page.getHtml(ExpressionType.XPATH).xpath("//td[@class='title' and contains(text(),'朝向')]/following-sibling::td[1]", "text").get();
+        if (StringUtils.isNotEmpty(houseToward)) {
+            houseToward = houseToward.replace("朝向：", "").replace("暂无数据", "").replaceAll("\\s+", "");
+        }
         page.putField("houseToward", houseToward);
 
         //位置
-        String location = page.getHtml(ExpressionType.XPATH).xpath("//div[@class='zf-room']/p/descendant::i[contains(text(),'位置')]/parent::p", "text").get()
-                .replace("位置：", "").replaceAll("\\s+", " ");
+        //北京
+        //String location = page.getHtml(ExpressionType.XPATH).xpath("//div[@class='zf-room']/p/descendant::i[contains(text(),'位置')]/parent::p", "text").get()
+        //.replace("位置：", "").replaceAll("\\s+", " ");
+        //苏州
+        String location = page.getHtml(ExpressionType.XPATH).xpath("//td[@class='title' and contains(text(),'地址')]/following-sibling::td[1]/p[@class='addrEllipsis']", "text").get();
+        if (StringUtils.isNotEmpty(location)) {
+            location = location.replace("地址：", "").replaceAll("\\s+", "").replace("（", "").replace("）", "");
+        }
         page.putField("location", location);
 
         //地铁
-        String subway = page.getHtml(ExpressionType.XPATH).xpath("//div[@class='zf-room']/p/descendant::i[contains(text(),'地铁')]/parent::p", "text").get()
-                .replace("地铁：", "").replace("暂无数据", "");
+        String subway = page.getHtml(ExpressionType.XPATH).xpath("//div[@class='zf-room']/p/descendant::i[contains(text(),'地铁')]/parent::p", "text").get();
+        if (StringUtils.isNotEmpty(subway)) {
+            subway = subway.replace("地铁：", "").replace("暂无数据", "");
+        }
         page.putField("subway", subway);
 
         //租赁方式
-        String rentType = page.getHtml(ExpressionType.XPATH).xpath("//div[@class='base']/div[@class='content']/ul/li/descendant::span[contains(text(),'租赁方式') and @class='label']/parent::li", "text").get()
-                .replace("租赁方式：", "").replace("暂无数据", "").replaceAll("\\s+", " ");
+        String rentType = page.getHtml(ExpressionType.XPATH).xpath("//div[@class='base']/div[@class='content']/ul/li/descendant::span[contains(text(),'租赁方式') and @class='label']/parent::li", "text").get();
+        if (StringUtils.isNotEmpty(rentType)) {
+            rentType = rentType.replace("租赁方式：", "").replace("暂无数据", "").replaceAll("\\s+", " ");
+        }
         page.putField("rentType", rentType);
 
         //付款方式
-        String payType = page.getHtml(ExpressionType.XPATH).xpath("//div[@class='base']/div[@class='content']/ul/li/descendant::span[contains(text(),'付款方式') and @class='label']/parent::li", "text").get()
-                .replace("付款方式：", "").replace("暂无数据", "").replaceAll("\\s+", " ");
+        String payType = page.getHtml(ExpressionType.XPATH).xpath("//div[@class='base']/div[@class='content']/ul/li/descendant::span[contains(text(),'付款方式') and @class='label']/parent::li", "text").get();
+        if (StringUtils.isNotEmpty(payType)) {
+            payType = payType.replace("付款方式：", "").replace("暂无数据", "").replaceAll("\\s+", " ");
+        }
         page.putField("payType", payType);
 
         //房屋现状
-        String houseState = page.getHtml(ExpressionType.XPATH).xpath("//div[@class='base']/div[@class='content']/ul/li/descendant::span[contains(text(),'房屋现状') and @class='label']/parent::li", "text").get()
-                .replace("房屋现状：", "").replace("暂无数据", "").replaceAll("\\s+", " ");
+        String houseState = page.getHtml(ExpressionType.XPATH).xpath("//div[@class='base']/div[@class='content']/ul/li/descendant::span[contains(text(),'房屋现状') and @class='label']/parent::li", "text").get();
+        if (StringUtils.isNotEmpty(houseState)) {
+            houseState = houseState.replace("房屋现状：", "").replace("暂无数据", "").replaceAll("\\s+", " ");
+        }
         page.putField("houseState", houseState);
 
         //供暖方式
-        String heatingWay = page.getHtml(ExpressionType.XPATH).xpath("//div[@class='base']/div[@class='content']/ul/li/descendant::span[contains(text(),'供暖方式') and @class='label']/parent::li", "text").get()
-                .replace("供暖方式：", "").replace("暂无数据", "").replaceAll("\\s+", " ");
+        String heatingWay = page.getHtml(ExpressionType.XPATH).xpath("//div[@class='base']/div[@class='content']/ul/li/descendant::span[contains(text(),'供暖方式') and @class='label']/parent::li", "text").get();
+        if (StringUtils.isNotEmpty(heatingWay)) {
+            heatingWay = heatingWay.replace("供暖方式：", "").replace("暂无数据", "").replaceAll("\\s+", " ");
+        }
         page.putField("heatingWay", heatingWay);
 
         //房源亮点

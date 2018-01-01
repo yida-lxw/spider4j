@@ -1,18 +1,17 @@
 package com.yida.spider4j.crawler.selector;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ListIterator;
-
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.w3c.dom.Node;
-
 import com.yida.spider4j.crawler.selector.jsoup.BaseElementSelector;
 import com.yida.spider4j.crawler.selector.jsoup.JsoupSelector;
 import com.yida.spider4j.crawler.selector.xpath.BaseNodeSelector;
 import com.yida.spider4j.crawler.selector.xpath.XpathSelector;
 import com.yida.spider4j.crawler.utils.common.StringUtils;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.w3c.dom.Node;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
 
 /**
  * @ClassName: HtmlNode
@@ -210,19 +209,34 @@ public class HtmlNode extends AbstractSelectable {
     @Override
     protected List<String> getSourceTexts() {
     	if(getElements() == null || getElements().size() <= 0) {
-    		List<String> sourceTexts = new ArrayList<String>(getNodes().size());
-            for (Node node : getNodes()) {
-                sourceTexts.add(node.getNodeValue());
+            List<Node> nodes = getNodes();
+            int size = -1;
+            if (null != nodes) {
+                size = nodes.size();
             }
-            return sourceTexts;
-    	} else {
-    		List<String> sourceTexts = new ArrayList<String>(getElements().size());
-            for (Element element : getElements()) {
-                sourceTexts.add(element.toString());
+            if (size > 0) {
+                List<String> sourceTexts = new ArrayList<String>(size);
+                for (Node node : nodes) {
+                    sourceTexts.add(node.getNodeValue());
+                }
+                return sourceTexts;
             }
-
-            return sourceTexts;
-    	}
+            return new ArrayList<String>(0);
+        } else {
+            List<Element> elements = getElements();
+            int size = -1;
+            if (null != elements) {
+                size = elements.size();
+            }
+            if (size > 0) {
+                List<String> sourceTexts = new ArrayList<String>(size);
+                for (Element element : elements) {
+                    sourceTexts.add(element.toString());
+                }
+                return sourceTexts;
+            }
+            return new ArrayList<String>(0);
+        }
     }
 
 	@Override
