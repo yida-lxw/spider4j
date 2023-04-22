@@ -1,0 +1,16 @@
+/lib/
+/libs/
+.idea/
+.svn/
+.settings/
+.DS_Store/
+*.iml
+overlays/
+target/
+output/
+logs/
+catalina.base_IS_UNDEFINED/
+.classpath
+.project
+svnbuild.xml
+app.pid
