@@ -4,12 +4,12 @@ import com.yida.spider4j.crawler.core.Page;
 
 /**
  * @ClassName: DetailPageProcessor
- * @Description: 详情页PageProcessor实现
+ * @Description: 详情页附属页PageProcessor实现
  * @author Lanxiaowei(736031305@qq.com)
  * @date 2015年10月13日 下午3:42:47
  *
  */
-public interface DetailPageProcessor extends PageProcessor {
+public interface AttachedPageProcessor extends PageProcessor {
 	/**
 	 * @Author: Lanxiaowei(736031305@qq.com)
 	 * @Title: process
@@ -31,14 +31,4 @@ public interface DetailPageProcessor extends PageProcessor {
 	 * @throws
 	 */
 	public boolean checkValid(Page page);
-
-	/**
-	 * 发送额外的请求用于补充详情页获取不到的数据，
-	 * 比如详情页的价格或评论等数据可能需要额外一次Ajax请求来加载
-	 * @param page
-	 */
-	void buildExtraRequest(Page page);
-
-	/**生成详情页的附属页的请求URL*/
-	String generateAttachedPageURL(Page page);
 }

@@ -7,7 +7,7 @@ import com.yida.spider4j.crawler.selector.ExpressionType;
 
 /**
  * @ClassName: DoubanDetailPageProcessor
- * @Description: 豆瓣电影Top250详情页处理器
+ * @Description: 网易新闻详情页处理器
  * @author Lanxiaowei(736031305@qq.com)
  * @date 2015年10月16日 下午2:40:10
  *
@@ -32,5 +32,15 @@ public class WangyiDetailPageProcessor extends SimpleDetailPageProcessor {
 		page.putField("language", page.getHtml(ExpressionType.XPATH).xpath("//span[contains(text(),'语言')]/following-sibling::text()").get());
 		
 		//FileUtils.writeFile(movieName + "\n", "C:/movie.txt", "UTF-8", true);
+	}
+
+	@Override
+	public void buildExtraRequest(Page page) {
+
+	}
+
+	@Override
+	public String generateAttachedPageURL(Page page) {
+		return null;
 	}
 }

@@ -11,6 +11,7 @@ import com.yida.spider4j.crawler.pipeline.CollectorPipeline;
 import com.yida.spider4j.crawler.pipeline.ConsolePipeline;
 import com.yida.spider4j.crawler.pipeline.PageResultItemCollectorPipeline;
 import com.yida.spider4j.crawler.pipeline.Pipeline;
+import com.yida.spider4j.crawler.processor.SimpleAttachedPageProcessor;
 import com.yida.spider4j.crawler.processor.SimpleDetailPageProcessor;
 import com.yida.spider4j.crawler.processor.SimpleListPageProcessor;
 import com.yida.spider4j.crawler.processor.SimpleSeedPageProcessor;
@@ -27,7 +28,14 @@ import org.apache.http.HttpHost;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -63,6 +71,8 @@ public class Spider implements Runnable, Task {
     
     /**详情页网页数据提取器*/
     protected SimpleDetailPageProcessor detailPageProcessor;
+
+    protected SimpleAttachedPageProcessor attachedPageProcessor;
 
     /**起始请求Request集合,由起始URL包装得到*/
     protected List<Request> startRequests;
@@ -147,29 +157,47 @@ public class Spider implements Runnable, Task {
     private int invokeTime;
     
     private static final int DEFAULT_INVOKE_TIME = 1;
-    
+
+    public static Spider create(SimpleSeedPageProcessor seedPageProcessor,
+                                SimpleStartPageProcessor startPageProcessor,
+                                SimpleListPageProcessor listPageProcessor,
+                                SimpleDetailPageProcessor detailPageProcessor) {
+        return new Spider(seedPageProcessor,startPageProcessor,listPageProcessor,detailPageProcessor, null);
+    }
+
     public static Spider create(SimpleSeedPageProcessor seedPageProcessor,
     		SimpleStartPageProcessor startPageProcessor,
     		SimpleListPageProcessor listPageProcessor,
-    		SimpleDetailPageProcessor detailPageProcessor) {
-        return new Spider(seedPageProcessor,startPageProcessor,listPageProcessor,detailPageProcessor);
+    		SimpleDetailPageProcessor detailPageProcessor,
+                                SimpleAttachedPageProcessor attachedPageProcessor) {
+        return new Spider(seedPageProcessor,startPageProcessor,listPageProcessor,detailPageProcessor, attachedPageProcessor);
     }
 
     public static Spider create(SimpleStartPageProcessor startPageProcessor,
     		SimpleListPageProcessor listPageProcessor,
-    		SimpleDetailPageProcessor detailPageProcessor) {
-        return new Spider(startPageProcessor,listPageProcessor,detailPageProcessor);
+    		SimpleDetailPageProcessor detailPageProcessor,
+                                SimpleAttachedPageProcessor attachedPageProcessor) {
+        return new Spider(startPageProcessor,listPageProcessor,detailPageProcessor, attachedPageProcessor);
+    }
+
+    public static Spider create(SimpleStartPageProcessor startPageProcessor,
+                                SimpleListPageProcessor listPageProcessor,
+                                SimpleDetailPageProcessor detailPageProcessor) {
+        return new Spider(startPageProcessor,listPageProcessor,detailPageProcessor, (SimpleAttachedPageProcessor)null);
     }
     
     public static Spider create(SimpleListPageProcessor listPageProcessor,
-    		SimpleDetailPageProcessor detailPageProcessor) {
-        return new Spider(listPageProcessor,detailPageProcessor);
+    		SimpleDetailPageProcessor detailPageProcessor,
+                                SimpleAttachedPageProcessor attachedPageProcessor) {
+        return new Spider(listPageProcessor,detailPageProcessor, attachedPageProcessor);
     }
     
     public Spider(SimpleSeedPageProcessor seedPageProcessor,
-    		SimpleStartPageProcessor startPageProcessor,
-    		SimpleListPageProcessor listPageProcessor,
-    		SimpleDetailPageProcessor detailPageProcessor,int invokeTime) {
+                  SimpleStartPageProcessor startPageProcessor,
+                  SimpleListPageProcessor listPageProcessor,
+                  SimpleDetailPageProcessor detailPageProcessor,
+                  SimpleAttachedPageProcessor attachedPageProcessor,
+                  int invokeTime) {
     	if(startPageProcessor == null && listPageProcessor == null && 
     		detailPageProcessor == null) {
     		throw new IllegalArgumentException("SimpleStartPageProcessor,SimpleListPageProcessor and SimpleDetailPageProcessor MUST not be all null.");
@@ -185,6 +213,7 @@ public class Spider implements Runnable, Task {
         this.startPageProcessor = startPageProcessor;
         this.listPageProcessor = listPageProcessor;
         this.detailPageProcessor = detailPageProcessor;
+        this.attachedPageProcessor = attachedPageProcessor;
         this.site = detailPageProcessor.getSite();
         if(startPageProcessor != null && 
         	startPageProcessor.getSite() != null) {
@@ -204,20 +233,30 @@ public class Spider implements Runnable, Task {
     public Spider(SimpleSeedPageProcessor seedPageProcessor,
     		SimpleStartPageProcessor startPageProcessor,
     		SimpleListPageProcessor listPageProcessor,
-    		SimpleDetailPageProcessor detailPageProcessor) {
+    		SimpleDetailPageProcessor detailPageProcessor,
+                  SimpleAttachedPageProcessor attachedPageProcessor) {
     	//默认爬虫实例只会执行一次
-    	this(seedPageProcessor, startPageProcessor, listPageProcessor, detailPageProcessor, DEFAULT_INVOKE_TIME);
+    	this(seedPageProcessor, startPageProcessor, listPageProcessor, detailPageProcessor, attachedPageProcessor,
+                DEFAULT_INVOKE_TIME);
     }
     
     public Spider(SimpleStartPageProcessor startPageProcessor,
     		SimpleListPageProcessor listPageProcessor,
-    		SimpleDetailPageProcessor detailPageProcessor) {
-    	this(null,startPageProcessor, listPageProcessor, detailPageProcessor);
+    		SimpleDetailPageProcessor detailPageProcessor,
+                  SimpleAttachedPageProcessor attachedPageProcessor) {
+    	this(null,startPageProcessor, listPageProcessor, detailPageProcessor, attachedPageProcessor);
+    }
+
+    public Spider(SimpleStartPageProcessor startPageProcessor,
+                  SimpleListPageProcessor listPageProcessor,
+                  SimpleDetailPageProcessor detailPageProcessor) {
+        this(null,startPageProcessor, listPageProcessor, detailPageProcessor, (SimpleAttachedPageProcessor)null);
     }
     
     public Spider(SimpleListPageProcessor listPageProcessor,
-    		SimpleDetailPageProcessor detailPageProcessor) {
-        this(null,null,listPageProcessor, detailPageProcessor);
+    		SimpleDetailPageProcessor detailPageProcessor,
+                  SimpleAttachedPageProcessor attachedPageProcessor) {
+        this(null,null,listPageProcessor, detailPageProcessor, attachedPageProcessor);
     }
 
     public Spider startUrls(List<String> startUrls) {
@@ -660,6 +699,8 @@ public class Spider implements Runnable, Task {
         	listPageProcessor.buildRequest(page);
         } else if(page.getPageType().equals(PageType.DETAIL_PAGE)) {
         	detailPageProcessor.process(page);
+        } else if(page.getPageType().equals(PageType.ATTACHED_PAGE)) {
+            attachedPageProcessor.process(page);
         }
         extractAndAddRequests(page, spawnUrl);
         if (null != page.getPageResultItem() &&

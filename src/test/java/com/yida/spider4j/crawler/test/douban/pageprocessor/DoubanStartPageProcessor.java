@@ -1,13 +1,13 @@
 package com.yida.spider4j.crawler.test.douban.pageprocessor;
 
-import java.util.List;
-
 import com.yida.spider4j.crawler.core.Page;
 import com.yida.spider4j.crawler.processor.SimpleStartPageProcessor;
 import com.yida.spider4j.crawler.processor.param.PageProcessorParam;
 import com.yida.spider4j.crawler.selector.Selectable;
 import com.yida.spider4j.crawler.utils.Constant;
 import com.yida.spider4j.crawler.utils.common.StringUtils;
+
+import java.util.List;
 
 /**
  * @ClassName: DoubanStartPageProcessor
@@ -26,7 +26,7 @@ public class DoubanStartPageProcessor extends SimpleStartPageProcessor {
 	 * @Title: determineTotalPage
 	 * @Description: 探测总页数
 	 * @param page
-	 * @param pagesize  每页显示大小
+	 * @param pageSize  每页显示大小
 	 * @param @return
 	 * @return int
 	 * @throws

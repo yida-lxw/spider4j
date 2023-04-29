@@ -35,6 +35,11 @@ public enum PageType {
 		String getValue(){
 			return DETAIL_PAGE_VALUE;
 		}
+	},
+	ATTACHED_PAGE {           //详情页的附属页(比如详情页的价格或评论等信息需要额外发送一次Ajax请求来获取)
+		String getValue(){
+			return ATTACHED_PAGE_VALUE;
+		}
 	};
 	
 	abstract String getValue();
@@ -53,4 +58,7 @@ public enum PageType {
 	
 	/**详情页*/
 	public static final String DETAIL_PAGE_VALUE = "detail";
+
+	/**详情页的附属页*/
+	public static final String ATTACHED_PAGE_VALUE = "attached";
 }

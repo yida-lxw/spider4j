@@ -1,13 +1,5 @@
 package com.yida.spider4j.crawler.test.wangyi;
 
-import com.yida.spider4j.crawler.core.Spider;
-import com.yida.spider4j.crawler.pipeline.ConsolePipeline;
-import com.yida.spider4j.crawler.processor.param.DetailPageProcessorParam;
-import com.yida.spider4j.crawler.processor.param.MultiPageProcessorParam;
-import com.yida.spider4j.crawler.test.wangyi.pageprocessor.WangyiDetailPageProcessor;
-import com.yida.spider4j.crawler.test.wangyi.pageprocessor.WangyiListPageProcessor;
-import com.yida.spider4j.crawler.test.wangyi.pageprocessor.WangyiStartPageProcessor;
-
 /**
  * @ClassName: DoubanSpider
  * @Description: 豆瓣电影爬虫测试类
@@ -17,6 +9,8 @@ import com.yida.spider4j.crawler.test.wangyi.pageprocessor.WangyiStartPageProces
  */
 public class WangyiSpider {
 	public static void main(String[] args) {
+		//start:指定起始页.然后解析出分页请求URL
+		//list:解析出详情页URL
 		String regex = "^https:\\/\\/www\\.163\\.com\\/[a-zA-Z]+\\/article\\/[a-zA-Z0-9]+\\.html\\?clickfrom=w_ent$";
 		//start
 		/*MultiPageProcessorParam startPageProcessorParam = new MultiPageProcessorParam();

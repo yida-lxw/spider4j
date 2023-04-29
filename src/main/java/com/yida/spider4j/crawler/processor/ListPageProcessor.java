@@ -19,7 +19,7 @@ public abstract class ListPageProcessor extends AbstractMultiPageProcessor {
 	 * @Title: determineTotalPage
 	 * @Description: 探测总页数
 	 * @param @param page
-	 * @param pagesize  每页显示大小
+	 * @param pageSize  每页显示大小
 	 * @param @return
 	 * @return int
 	 * @throws
