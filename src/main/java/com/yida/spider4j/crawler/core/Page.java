@@ -1,17 +1,17 @@
 package com.yida.spider4j.crawler.core;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.yida.spider4j.crawler.selector.ExpressionType;
 import com.yida.spider4j.crawler.selector.Html;
 import com.yida.spider4j.crawler.selector.Json;
 import com.yida.spider4j.crawler.selector.Selectable;
 import com.yida.spider4j.crawler.utils.common.StringUtils;
 import com.yida.spider4j.crawler.utils.url.URLUtils;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -65,9 +65,19 @@ public class Page {
     
     /**是否为GET请求获取的*/
     private boolean httpGet;
-    
+
+    /**当前页数据是执行insert或update*/
+    private boolean insertOrUpdate;
+
     public Page() {
-    	this.resultItem = new PageResultItem();
+        this.resultItem = new PageResultItem();
+        this.targetRequests = new ArrayList<Request>();
+        this.responseHeader = new HashMap<String, String>();
+    }
+
+    public Page(boolean insertOrUpdate) {
+        this.insertOrUpdate = insertOrUpdate;
+    	this.resultItem = new PageResultItem(insertOrUpdate);
     	this.targetRequests = new ArrayList<Request>();
     	this.responseHeader = new HashMap<String, String>();
     }
@@ -540,7 +550,15 @@ public class Page {
 		this.httpGet = httpGet;
 	}
 
-	@Override
+    public boolean isInsertOrUpdate() {
+        return insertOrUpdate;
+    }
+
+    public void setInsertOrUpdate(boolean insertOrUpdate) {
+        this.insertOrUpdate = insertOrUpdate;
+    }
+
+    @Override
     public String toString() {
         return "Page{" +
                 "request=" + request +
