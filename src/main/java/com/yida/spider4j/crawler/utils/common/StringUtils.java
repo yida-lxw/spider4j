@@ -1,8 +1,11 @@
 package com.yida.spider4j.crawler.utils.common;
 
+import com.yida.spider4j.crawler.utils.Constant;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -18,8 +21,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import com.yida.spider4j.crawler.utils.Constant;
 
 /**
  * @ClassName: StringUtils
@@ -1171,8 +1172,7 @@ public class StringUtils {
 	/**
 	 * 字符串转换成十六进制字符串
 	 * 
-	 * @param String
-	 *            str 待转换的ASCII字符串
+	 * @param str 待转换的ASCII字符串
 	 * @return String 每个Byte之间空格分隔，如: [61 6C 6B]
 	 */
 	public static String str2HexStr(String str) {
@@ -1193,8 +1193,7 @@ public class StringUtils {
 	/**
 	 * 十六进制转换字符串
 	 * 
-	 * @param String
-	 *            str Byte字符串(Byte之间无分隔符 如:[616C6B])
+	 * @param hexStr Byte字符串(Byte之间无分隔符 如:[616C6B])
 	 * @return String 对应的字符串
 	 */
 	public static String hexStr2Str(String hexStr) {
@@ -1213,7 +1212,7 @@ public class StringUtils {
 	/**
 	 * 字节数组转换成十六进制字符串
 	 * 
-	 * @param byte[] b byte数组
+	 * @param b byte数组
 	 * @return String 每个Byte值之间空格分隔
 	 */
 	public static String byte2HexStr(byte[] b) {
@@ -1230,8 +1229,7 @@ public class StringUtils {
 	/**
 	 * bytes字符串转换为字节数组
 	 * 
-	 * @param String
-	 *            src Byte字符串，每个Byte之间没有分隔符
+	 * @param src  Byte字符串，每个Byte之间没有分隔符
 	 * @return byte[]
 	 */
 	public static byte[] hexStr2Bytes(String src) {
@@ -1250,8 +1248,7 @@ public class StringUtils {
 	/**
 	 * String的字符串转换成unicode的String
 	 * 
-	 * @param String
-	 *            strText 全角字符串
+	 * @param strText 全角字符串
 	 * @return String 每个unicode之间无分隔符
 	 * @throws Exception
 	 */
@@ -1295,8 +1292,7 @@ public class StringUtils {
 	/**
 	 * unicode的String转换成String的字符串
 	 * 
-	 * @param String
-	 *            hex 16进制值字符串 （一个unicode为2byte）
+	 * @param hex 16进制值字符串 （一个unicode为2byte）
 	 * @return String 全角字符串
 	 */
 	public static String unicodeToString(String hex) {
@@ -1745,32 +1741,6 @@ public class StringUtils {
     
     /**
      * @Author: Lanxiaowei(736031305@qq.com)
-     * @Title: isEmpty
-     * @Description: 判断字符串是否为空或者为空字符串
-     * @param @param str
-     * @param @return
-     * @return boolean
-     * @throws
-     */
-    public static boolean isEmpty(String str) {
-        return str == null || str.length() == 0;
-    }
-    
-    /**
-     * @Author: Lanxiaowei(736031305@qq.com)
-     * @Title: isNotEmpty
-     * @Description: isEmpty取反
-     * @param @param str
-     * @param @return
-     * @return boolean
-     * @throws
-     */
-    public static boolean isNotEmpty(String str) {
-        return !isEmpty(str);
-    }
-    
-    /**
-     * @Author: Lanxiaowei(736031305@qq.com)
      * @Title: countMatches
      * @Description: 判断子串在源串中出现的次数
      * @param @param str
@@ -1836,6 +1806,126 @@ public class StringUtils {
 		}
     	return regex;
     }
+
+	/**
+	 * 判断指定字符串是否为null或空字符串
+	 * @param source
+	 * @return
+	 */
+	public static boolean isEmpty(String source) {
+		return (null == source || "".equals(source));
+	}
+
+	/**
+	 * 判断指定字符串是否不为null且不为空字符串
+	 * @param source
+	 * @return
+	 */
+	public static boolean isNotEmpty(String source) {
+		return !isEmpty(source);
+	}
+
+	/**
+	 * 替换路径中的反斜杠为斜杠
+	 * @param appRootPath
+	 */
+	public static String replaceBackSlash(String appRootPath) {
+		if(null != appRootPath && !"".equals(appRootPath)) {
+			appRootPath = appRootPath.replace("\\", "/");
+		}
+		return appRootPath;
+	}
+
+	/**
+	 * 删除字符串中包含的所有空格
+	 * @param source
+	 * @return
+	 */
+	public static String removeAllWhiteSpace(String source) {
+		if(isEmpty(source)) {
+			return source;
+		}
+		return org.apache.commons.lang3.StringUtils.deleteWhitespace(source);
+	}
+
+	/**
+	 * 字符串转成ByteBuffer
+	 * @param source
+	 * @return
+	 */
+	public static ByteBuffer string2ByteBuffer(String source) {
+		return ByteBuffer.wrap(source.getBytes());
+	}
+
+	/**
+	 * @description 将UserName转成user_name形式
+	 * @author yida
+	 * @date 2023-04-26 09:18:26
+	 * @param input
+	 *
+	 * @return String
+	 */
+	public static String toSnakeCase(String input) {
+		StringBuilder output = new StringBuilder();
+		for (int i = 0; i < input.length(); i++) {
+			char c = input.charAt(i);
+			if (Character.isUpperCase(c)) {
+				if (output.length() > 0 && output.charAt(output.length() - 1) != '_') {
+					output.append('_');
+				}
+				output.append(Character.toLowerCase(c));
+			} else {
+				output.append(c);
+			}
+		}
+		return output.toString();
+	}
+
+	/**
+	 * @description 将user_name转换成UserName
+	 * @author yida
+	 * @date 2023-04-26 11:40:33
+	 * @param input
+	 *
+	 * @return String
+	 */
+	public static String toCamel(String input) {
+		StringBuilder sb = new StringBuilder();
+		String[] parts = input.split("_");
+		for (String part : parts) {
+			// 处理开头和结尾是下划线的情况
+			if (!part.isEmpty()) {
+				char first = Character.toUpperCase(part.charAt(0));
+				String rest = part.substring(1);
+				sb.append(first).append(rest);
+			}
+		}
+		return sb.toString();
+	}
+
+	/**
+	 * @description 首字母转成小写
+	 * @author yida
+	 * @date 2023-04-26 11:41:38
+	 * @param input
+	 *
+	 * @return String
+	 */
+	public static String convertFirstLetterToLowerCase(String input) {
+		return org.apache.commons.lang3.StringUtils.uncapitalize(input);
+	}
+
+	/**
+	 * @description 首字母转成大写
+	 * @author yida
+	 * @date 2023-04-26 11:41:38
+	 * @param input
+	 *
+	 * @return String
+	 */
+	public static String convertFirstLetterToUpperCase(String input) {
+		return org.apache.commons.lang3.StringUtils.capitalize(input);
+	}
 	
 	public static void main(String[] args) {
 		//String html = "<meta  content=\"text/html; charset=UTF-8\" http-equiv=\"Content-Type\"/>";

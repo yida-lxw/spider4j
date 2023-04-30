@@ -1,9 +1,16 @@
 package com.yida.spider4j.crawler.test.wangyi.pageprocessor;
 
 import com.yida.spider4j.crawler.core.Page;
+import com.yida.spider4j.crawler.core.PageType;
+import com.yida.spider4j.crawler.core.Request;
 import com.yida.spider4j.crawler.processor.SimpleDetailPageProcessor;
 import com.yida.spider4j.crawler.processor.param.PageProcessorParam;
 import com.yida.spider4j.crawler.selector.ExpressionType;
+import com.yida.spider4j.crawler.utils.HttpConstant;
+import com.yida.spider4j.crawler.utils.common.StringUtils;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @ClassName: DoubanDetailPageProcessor
@@ -13,34 +20,61 @@ import com.yida.spider4j.crawler.selector.ExpressionType;
  *
  */
 public class WangyiDetailPageProcessor extends SimpleDetailPageProcessor {
+	private static final String commentCountUrlTemplate = "https://comment.api.163.com/api/v1/products/%s/threads/%s?ibc=jssdk";
+
 	public WangyiDetailPageProcessor(PageProcessorParam pageProcessorParam) {
 		super(pageProcessorParam);
 	}
-	
+
 	@Override
 	public void process(Page page) {
 		super.process(page);
-		String movieName = page.getHtml(ExpressionType.JSOUP).jsoup("span[property=v:itemreviewed]","text").get();
-		page.putField("movieName", movieName);
-		page.putField("logo", 
-			page.getHtml(ExpressionType.XPATH).xpath("//div[@id='mainpic']/a[@class='nbgnbg']/img/attribute::src").get());
-		//xpath:3个参数依次是xpath表达式,提取的属性名称,是否提取多个[可能XPath表达式会匹配到多个节点]
-		//注意,返回多个值,最后需要调用all(),get()只返回第一个
-		page.putField("movieType", page.getHtml(ExpressionType.XPATH).xpath(
-			"//span[contains(text(),'类型')]/following-sibling::span[@property='v:genre'] | "
-	    	+ "//span[contains(text(),'制片国家/地区:')]/preceding-sibling::span[@property='v:genre']","text",true).all());
-		page.putField("language", page.getHtml(ExpressionType.XPATH).xpath("//span[contains(text(),'语言')]/following-sibling::text()").get());
-		
+		String pageId = page.getHtml(ExpressionType.JSOUP).jsoup("div[id=contain]","data-docid").get();
+		page.putField("pageId", pageId);
+
+		page.putField("media",
+				page.getHtml(ExpressionType.JSOUP).jsoup("div[class=date-source] > a[class^=source],span.source.ent-source," +
+						"div[class=post_info] > a:first-child").get());
+
+		page.putField("title",
+				page.getHtml(ExpressionType.JSOUP).jsoup("h1[class=main-title],h1[class=post_title]").get());
+
+		page.putField("publishDate", page.getHtml(ExpressionType.JSOUP).jsoup("span[class=ptime],span[class=post_info]").get());
+
+		page.putField("commentCount", page.getHtml(ExpressionType.JSOUP).jsoup("a[class^=post_top_tie_count]").get());
+
+
 		//FileUtils.writeFile(movieName + "\n", "C:/movie.txt", "UTF-8", true);
 	}
 
 	@Override
 	public void buildExtraRequest(Page page) {
-
+		String commentCountUrl = generateAttachedPageURL(page);
+		if (StringUtils.isEmpty(commentCountUrl)) {
+			return;
+		}
+		Request request = new Request(commentCountUrl, PageType.ATTACHED_PAGE, HttpConstant.Method.GET);
+		page.addTargetRequest(request);
 	}
 
 	@Override
 	public String generateAttachedPageURL(Page page) {
-		return null;
+		String html = page.getHtml(ExpressionType.JSOUP).get();
+		//获取productKey
+		Pattern pattern = Pattern.compile("\"productKey\":\\s*\"(.*?)\"");
+		Matcher matcher = pattern.matcher(html);
+		String commentCountUrl = "";
+		if (matcher.find()) {
+			String productKey = matcher.group(1);
+			if(null != productKey && !"".equals(productKey)) {
+				pattern = Pattern.compile("\"docId\":\\s*\"(.*?)\"");
+				matcher = pattern.matcher(html);
+				if (matcher.find()) {
+					String pageId = matcher.group(1);
+					commentCountUrl = String.format(commentCountUrlTemplate, productKey, pageId);
+				}
+			}
+		}
+		return commentCountUrl;
 	}
 }

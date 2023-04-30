@@ -1,15 +1,15 @@
 package com.yida.spider4j.crawler.processor;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.yida.spider4j.crawler.core.Page;
 import com.yida.spider4j.crawler.core.PageType;
 import com.yida.spider4j.crawler.processor.param.DetailPageProcessorParam;
 import com.yida.spider4j.crawler.processor.param.PageProcessorParam;
 import com.yida.spider4j.crawler.utils.HttpConstant;
 import com.yida.spider4j.crawler.utils.common.StringUtils;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @ClassName: SimpleStartPageProcessor
@@ -176,5 +176,14 @@ public abstract class SimpleDetailPageProcessor extends SimplePageProcessor impl
 			return list;
 		}
 		return list;
+	}
+
+	public void buildExtraRequest(Page page) {
+
+	}
+
+	/**生成详情页的附属页的请求URL*/
+	public String generateAttachedPageURL(Page page) {
+		return "";
 	}
 }

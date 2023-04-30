@@ -3,11 +3,16 @@ package com.yida.spider4j.crawler.test.wangyi.pageprocessor;
 import com.yida.spider4j.crawler.core.Page;
 import com.yida.spider4j.crawler.processor.SimpleStartPageProcessor;
 import com.yida.spider4j.crawler.processor.param.PageProcessorParam;
-import com.yida.spider4j.crawler.selector.Selectable;
-import com.yida.spider4j.crawler.utils.Constant;
-import com.yida.spider4j.crawler.utils.common.StringUtils;
+import com.yida.spider4j.crawler.test.wangyi.bean.WangyiDetailPage;
+import com.yida.spider4j.crawler.utils.common.DateUtils;
+import com.yida.spider4j.crawler.utils.common.FastJSonUtils;
+import com.yida.spider4j.crawler.utils.jdbc.AbstractDAO;
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * @ClassName: DoubanStartPageProcessor
@@ -17,100 +22,12 @@ import java.util.List;
  *
  */
 public class WangyiStartPageProcessor extends SimpleStartPageProcessor {
+	private static final Logger logger = Logger.getLogger(WangyiStartPageProcessor.class.getName());
+
 	public WangyiStartPageProcessor(PageProcessorParam pageProcessorParam) {
 		super(pageProcessorParam);
 	}
 
-	/**
-	 * @Author: Lanxiaowei(736031305@qq.com)
-	 * @Title: determineTotalPage
-	 * @Description: 探测总页数
-	 * @param page
-	 * @param pageSize  每页显示大小
-	 * @param @return
-	 * @return int
-	 * @throws
-	 */
-	@Override
-	public int determineTotalPage(Page page,int pageSize) {
-		if(page == null) {
-			return 0;
-		}
-		String text = page.getHtml().jsoup("span[class=count]").get();
-		if(StringUtils.isEmpty(text)) {
-			return 0;
-		}
-		text = StringUtils.getNumberFromString(text);
-		if(StringUtils.isEmpty(text)) {
-			return 0;
-		}
-		try {
-			int total = Integer.valueOf(text);
-			if(pageSize <= 0) {
-				pageSize = Constant.PAGE_SIZE;
-			}
-			return (total % pageSize == 0) ? (total / pageSize) : (total / pageSize) + 1;
-		} catch (NumberFormatException e) {
-			return 0;
-		}
-	}
-
-	/**
-	 * @Author: Lanxiaowei(736031305@qq.com)
-	 * @Title: determinePageSize
-	 * @Description: 探测每页显示大小
-	 * @param @param page
-	 * @param @return
-	 * @return int
-	 * @throws
-	 */
-	@Override
-	public int determinePageSize(Page page) {
-		if(page == null) {
-			return Constant.PAGE_SIZE;
-		}
-		List<Selectable> list = page.getHtml().jsoup("ol[class=grid_view] > li").nodes();
-		if(null == list || list.size() <= 0) {
-			return Constant.PAGE_SIZE;
-		}
-		return list.size();
-	}
-
-	/**
-	 * @Author: Lanxiaowei(736031305@qq.com)
-	 * @Title: knownTotalPage
-	 * @Description: 告诉PageProcessor,从已有的分页页面内容可否已知总页数
-	 *               需要用户实现
-	 * @param @return
-	 * @return boolean
-	 * @throws
-	 */
-	@Override
-	public boolean knownTotalPage() {
-		return true;
-	}
-
-	/**
-	 * @Author: Lanxiaowei(736031305@qq.com)
-	 * @Title: buildNextPageUrl
-	 * @Description: 构建下一页的请求URL
-	 * @param @param page
-	 * @param @param currentPage
-	 * @param @param totalPage
-	 * @param @param pageSize
-	 * @param @return
-	 * @return String
-	 * @throws
-	 */
-	@Override
-	public String buildNextPageUrl(Page page, int currentPage, int totalPage,
-			int pageSize) {
-		int start = (currentPage - 1) * pageSize;
-		String urlPrefix = "http://movie.douban.com/top250?start=0&filter=&type=";
-		urlPrefix = urlPrefix.replace("?start=0", "?start=" + start);
-		return urlPrefix;
-	}
-	
 	/**
 	 * @Author: Lanxiaowei(736031305@qq.com)
 	 * @Title: needPaging
@@ -122,5 +39,56 @@ public class WangyiStartPageProcessor extends SimpleStartPageProcessor {
 	@Override
 	public boolean needPaging() {
 		return true;
+	}
+
+	@Override
+	public List<String> pickUpPagingUrl(Page page) {
+		try {
+			String htmlBody = page.getHtml().get();
+			htmlBody = htmlBody.substring(htmlBody.indexOf("["));
+			htmlBody = htmlBody.substring(0, htmlBody.lastIndexOf("]") + 1);
+			htmlBody = htmlBody
+					.replace("a href=\"", "a href=\\\"")
+					.replace("\" class=\"", "\\\" class=\\\"")
+					.replace("\">", "\\\">");
+			logger.info("JSON数据：\n" + htmlBody);
+			List<Map<String,Object>> dataList = FastJSonUtils.toListMap(htmlBody);
+			if(null != dataList && dataList.size() > 0) {
+				List<String> detailPageUrlList = new ArrayList<>(dataList.size());
+				List<WangyiDetailPage> detailPageList = new ArrayList<>(dataList.size());
+				for(Map<String,Object> itemMap : dataList) {
+					String pageUrl = itemMap.get("docurl").toString();
+					detailPageUrlList.add(pageUrl);
+					String title = itemMap.get("title").toString();
+					String media = itemMap.get("source").toString();
+					String channel = itemMap.get("channelname").toString();
+					Date publishDate = DateUtils.stringToDate(itemMap.get("time").toString(),
+							"MM/dd/yyyy HH:mm:ss");
+					String pageId = pageUrl.replace(".html", "");
+					pageId = pageId.substring(pageId.lastIndexOf("/") + 1);
+					WangyiDetailPage wangyiDetailPage = new WangyiDetailPage();
+					wangyiDetailPage.setPageId(pageId);
+					wangyiDetailPage.setChannel(channel);
+					wangyiDetailPage.setPageUrl(pageUrl);
+					wangyiDetailPage.setTitle(title);
+					wangyiDetailPage.setMedia(media);
+					wangyiDetailPage.setCommentCount(0);
+					wangyiDetailPage.setPublishDate(publishDate);
+					detailPageList.add(wangyiDetailPage);
+				}
+				if(null != detailPageList && detailPageList.size() > 0) {
+					//Map<String, Object> dataMap = SQLBuilder.buildBatchInsertSQL(detailPageList, true, false);
+					//String insertSQL = dataMap.get(SQLBuilder.SQL_KEY).toString();
+					//Object[][] params = (Object[][])dataMap.get(SQLBuilder.PARAMS_KEY);
+					//boolean success = JDBCUtils.insertBatch(insertSQL, params, true);
+					boolean success = new AbstractDAO<Long, WangyiDetailPage>(){}.insertOrUpdateBatch(detailPageList);
+					System.out.println("批量插入" + ((success)? "成功" : "失败"));
+				}
+				return detailPageUrlList;
+			}
+		} catch (Exception e) {
+			logger.info(e.getMessage());
+		}
+		return new ArrayList<>();
 	}
 }

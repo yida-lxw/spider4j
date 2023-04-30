@@ -224,7 +224,6 @@ public class Spider implements Runnable, Task {
         	this.startRequests = this.site.getStartRequests();
         	this.startUrls = this.site.getStartUrls();
         	this.startUrl = this.site.getStartUrl();
-        	
         } else {
         	throw new IllegalArgumentException("You don't still set the startUrl.");
         }
@@ -260,8 +259,9 @@ public class Spider implements Runnable, Task {
     }
 
     public Spider startUrls(List<String> startUrls) {
-        checkIfRunning();
-        this.startRequests = Site.urlToRequests(startUrls);
+        for(String startUrl : startUrls) {
+            startUrl(startUrl);
+        }
         return this;
     }
 

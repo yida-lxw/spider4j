@@ -73,6 +73,26 @@ public class ReflectionUtils {
 	}
 
 	/**
+	 * @description 通过反射获取对象指定属性的值
+	 * @author yida
+	 * @date 2023-04-27 14:19:23
+	 * @param entity
+	 * @param fieldName
+	 *
+	 * @return {@link P}
+	 */
+	public static <P, T>P loadFieldValue(T entity, String fieldName) {
+		try {
+			Class<T> entityClass = (Class<T>) entity.getClass();
+			Field field = entityClass.getDeclaredField(fieldName);
+			field.setAccessible(true);
+			return (P)field.get(entity);
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	/**
 	 * 直接设置对象属性值, 无视private/protected修饰符, 不经过setter函数.
 	 */
 	public static void setFieldValue(final Object object, final String fieldName, final Object value) {
