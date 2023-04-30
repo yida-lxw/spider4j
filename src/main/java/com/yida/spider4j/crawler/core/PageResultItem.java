@@ -26,6 +26,17 @@ public class PageResultItem {
     /**是否跳过不处理*/
     private boolean skip;
 
+    /**需要insert or update, true=insert, false=update*/
+    private boolean insertOrUpdate;
+
+    public PageResultItem() {
+        this.insertOrUpdate = true;
+    }
+
+    public PageResultItem(boolean insertOrUpdate) {
+        this.insertOrUpdate = insertOrUpdate;
+    }
+
     /**
      * @Author: Lanxiaowei(736031305@qq.com)
      * @Title: get
@@ -95,6 +106,14 @@ public class PageResultItem {
     public PageResultItem setSkip(boolean skip) {
         this.skip = skip;
         return this;
+    }
+
+    public boolean isInsertOrUpdate() {
+        return insertOrUpdate;
+    }
+
+    public void setInsertOrUpdate(boolean insertOrUpdate) {
+        this.insertOrUpdate = insertOrUpdate;
     }
 
     public List<LinkedHashMap<String, Object>> getDataMapList() {

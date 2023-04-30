@@ -1,19 +1,17 @@
 package com.yida.spider4j.crawler.pipeline;
 
+import com.yida.spider4j.crawler.core.PageResultItem;
+import com.yida.spider4j.crawler.task.Task;
+import com.yida.spider4j.crawler.utils.common.ArrayUtils;
+import com.yida.spider4j.crawler.utils.common.StringUtils;
+import com.yida.spider4j.crawler.utils.db.DBUtil;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import sun.misc.Unsafe;
-
-import com.yida.spider4j.crawler.core.PageResultItem;
-import com.yida.spider4j.crawler.task.Task;
-import com.yida.spider4j.crawler.utils.common.ArrayUtils;
-import com.yida.spider4j.crawler.utils.common.StringUtils;
-import com.yida.spider4j.crawler.utils.db.DBUtil;
 /**
  * @ClassName: DataBasePipeline
  * @Description: 存储PageResultItem数据至数据库里
@@ -98,109 +96,178 @@ public class DataBasePipeline implements Pipeline {
 					pageResultItem.getDataMapList().size() <= 0))) {
 			return;
 		}
-		String sql = this.sql;
-		
 		Object[] params = dataToArray(pageResultItem);
 		if(params == null || params.length <= 0) {
 			return;
 		}
-		//若没有设置主键,则生成insert SQL
-		if(StringUtils.isEmpty(this.uniqueKey)) {
-			//若用户没传入待执行的SQL语句
-			if(StringUtils.isEmpty(sql)) {
-				sql = createInsertSQL(pageResultItem.getAll());
-			}
-			if(StringUtils.isEmpty(sql)) {
+		String sql = this.sql;
+		//用户是否显式设置了当前页的数据是插入还是更新
+		boolean insertOrUpdate = pageResultItem.isInsertOrUpdate();
+		//若用户显式指定了需要执行update操作
+		if(!insertOrUpdate) {
+			if(StringUtils.isEmpty(this.uniqueKey)) {
 				return;
 			}
-			Connection con = null;
-			try {
-				if(StringUtils.isEmpty(databaseName)) {
-					con = dbUtil.openConn();
-				} else {
-					con = dbUtil.openConn(databaseName);
+			String fieldName = getFieldName();
+			//若有设置主键,则先根据主键查询,若查询到数据,则表明需要更新,否则需要插入
+			Object uniqueKeyVal = pageResultItem.getDataMap().get(fieldName);
+			//如果主键值为空,则直接跳过不处理
+			if(null == uniqueKeyVal) {
+				return;
+			}
+			//若用户没有显式指定update SQL语句，则需要自动生成
+			updateData(pageResultItem, sql, params, uniqueKeyVal);
+		} else {
+			//否则需要根据当前页提取的数据中是否包含主键数据来判断是插入还是更新
+			//若没有设置主键,则生成insert SQL
+			if(StringUtils.isEmpty(this.uniqueKey)) {
+				insertData(pageResultItem, sql, params);
+				return;
+			}
+			String fieldName = getFieldName();
+			//若有设置主键,则先根据主键查询,若查询到数据,则表明需要更新,否则需要插入
+			Object uniqueKeyVal = pageResultItem.getDataMap().get(fieldName);
+			//如果主键值为空,则选择插入数据
+			if(null == uniqueKeyVal) {
+				insertData(pageResultItem, sql, params);
+				return;
+			}
+			//若用户没有指定Update SQL语句,则需要自动生成Update SQL
+			updateData(pageResultItem, sql, params, uniqueKeyVal);
+		}
+
+	}
+
+	private String getFieldName() {
+		String fieldName = null;
+		if(this.columnMapping != null && !this.columnMapping.isEmpty()) {
+			for(Map.Entry<String,String> entry : this.columnMapping.entrySet()) {
+				String val = entry.getValue();
+				if(StringUtils.isEmpty(val)) {
+					continue;
 				}
-				dbUtil.update(con, sql, params);
-			} catch (ClassNotFoundException e) {
-				e.printStackTrace();
-			} catch (SQLException e) {
-				e.printStackTrace();
-			} finally {
-				try {
-					dbUtil.closeConn(con);
-				} catch (SQLException e) {
-					e.printStackTrace();
+				if(fieldName == null && val.equals(uniqueKey)) {
+					fieldName = entry.getKey();
+					break;
 				}
 			}
-		} 
-		else {
-			//若用户没有指定SQL语句,则需要自动生成SQL
-			if(StringUtils.isEmpty(sql)) {
-				String fieldName = null;
-				if(this.columnMapping != null && !this.columnMapping.isEmpty()) {
-					for(Map.Entry<String,String> entry : this.columnMapping.entrySet()) {
-						String val = entry.getValue();
-						if(StringUtils.isEmpty(val)) {
-							continue;
-						}
-						if(fieldName == null && val.equals(uniqueKey)) {
-							fieldName = entry.getKey();
-						}
-					}
-				}
-				
-				if(StringUtils.isEmpty(fieldName)) {
-					fieldName = this.uniqueKey;
-				}
-				//若有设置主键,则先根据主键查询,若查询到数据,则表明需要更新,否则需要插入
-				String selectSql = "select " + this.uniqueKey + 
+		}
+		if(StringUtils.isEmpty(fieldName)) {
+			fieldName = this.uniqueKey;
+		}
+		return fieldName;
+	}
+
+	private void insertOrUpdateData(PageResultItem pageResultItem, Object[] params, String fieldName,
+								 Object uniqueKeyVal) {
+		String sql;
+		Connection con = null;
+		try {
+			if(StringUtils.isEmpty(databaseName)) {
+				con = dbUtil.openConn();
+			} else {
+				con = dbUtil.openConn(databaseName);
+			}
+			String selectSql = "select " + this.uniqueKey +
 					" from " + this.tableName + " where " + this.uniqueKey + "=?";
-				Object uniqueKeyVal = pageResultItem.getDataMap().get(fieldName);
-				
-				//如果主键值为空,则直接跳过不处理
-				if(null == uniqueKeyVal) {
+			Object keyObj = dbUtil.queryColumn(this.uniqueKey, con,
+					selectSql, new Object[] {uniqueKeyVal});
+			//若根据主键找到了记录,说明需要执行更新操作
+			if(null != keyObj) {
+				if(StringUtils.isEmpty(fieldName)) {
 					return;
 				}
-				Connection con = null;
-				try {
-					if(StringUtils.isEmpty(databaseName)) {
-						con = dbUtil.openConn();
-					} else {
-						con = dbUtil.openConn(databaseName);
-					}
-					Object keyObj = dbUtil.queryColumn(this.uniqueKey, con, 
-						selectSql, new Object[] {uniqueKeyVal});
-					//若根据主键找到了记录,说明需要执行更新操作
-					if(null != keyObj) {
-						if(StringUtils.isEmpty(fieldName)) {
-							return;
-						}
-						sql = createUpdateSQL(pageResultItem.getDataMap());
-						Object[] paramsNew = ArrayUtils.copyArrayGrowN(params, 1);
-						paramsNew[params.length] = uniqueKeyVal;
-						dbUtil.update(con, sql, paramsNew);
-					} else {
-						sql = createInsertSQL(pageResultItem.getDataMap()); 
-						//insert into database
-						dbUtil.update(con, sql, params);
-					}
-				} catch (ClassNotFoundException e) {
-					e.printStackTrace();
-				} catch (SQLException e) {
-					e.printStackTrace();
-				} finally {
-					try {
-						dbUtil.closeConn(con);
-					} catch (SQLException e) {
-						e.printStackTrace();
-					}
-				}
+				sql = createUpdateSQL(pageResultItem.getDataMap());
+				Object[] paramsNew = ArrayUtils.copyArrayGrowN(params, 1);
+				paramsNew[params.length] = uniqueKeyVal;
+				dbUtil.update(con, sql, paramsNew);
 			} else {
-				
-			}	
+				sql = createInsertSQL(pageResultItem.getDataMap());
+				//insert into database
+				dbUtil.update(con, sql, params);
+			}
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				dbUtil.closeConn(con);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 		}
 	}
-	
+
+	private void updateData(PageResultItem pageResultItem, Object[] params, Object uniqueKeyVal) {
+		updateData(pageResultItem, null, params, uniqueKeyVal);
+	}
+
+	private void updateData(PageResultItem pageResultItem, String updateSQL, Object[] params,
+							Object uniqueKeyVal) {
+		Connection con = null;
+		try {
+			if(StringUtils.isEmpty(databaseName)) {
+				con = dbUtil.openConn();
+			} else {
+				con = dbUtil.openConn(databaseName);
+			}
+			//若有设置主键,则先根据主键查询,若查询到数据,则表明需要更新,否则跳过
+			String selectSql = "select " + this.uniqueKey +
+					" from " + this.tableName + " where " + this.uniqueKey + "=?";
+			Object keyObj = dbUtil.queryColumn(this.uniqueKey, con,
+					selectSql, new Object[] {uniqueKeyVal});
+			//若根据主键找到了记录,说明需要执行更新操作
+			if(null != keyObj) {
+				if(StringUtils.isEmpty(updateSQL)) {
+					updateSQL = createUpdateSQL(pageResultItem.getDataMap());
+				}
+				Object[] paramsNew = ArrayUtils.copyArrayGrowN(params, 1);
+				paramsNew[params.length] = uniqueKeyVal;
+				dbUtil.update(con, updateSQL, paramsNew);
+			}
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				dbUtil.closeConn(con);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private void insertData(PageResultItem pageResultItem, String sql, Object[] params) {
+		//若用户没传入待执行的SQL语句
+		if(StringUtils.isEmpty(sql)) {
+			sql = createInsertSQL(pageResultItem.getAll());
+		}
+		if(StringUtils.isEmpty(sql)) {
+			return;
+		}
+		Connection con = null;
+		try {
+			if(StringUtils.isEmpty(databaseName)) {
+				con = dbUtil.openConn();
+			} else {
+				con = dbUtil.openConn(databaseName);
+			}
+			dbUtil.update(con, sql, params);
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				dbUtil.closeConn(con);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
 	/**
 	 * @Author: Lanxiaowei(736031305@qq.com)
 	 * @Title: createInsertSQL
