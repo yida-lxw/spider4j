@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    name: spider
+    url: jdbc:mysql://localhost:3306/spider?allowMultiQueries=true&useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+    username: root
+    password: 1111
+    driver-class-name: org.gjt.mm.mysql.Driver
+  thymeleaf:
+    enabled: true
+    encoding: utf-8
+    prefix: classpath:/templates/
+    cache: false
+    mode: HTML
+    suffix: .html

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>每日热点榜</title>
+</head>
+<body>
+<span>每日热点榜</span>
+<ul class="s-news-rank-content">
+    <li class="news-meta-item clearfix" th:each="hotNews,stat:${hotNewsList}">
+        <a class="title-content c-link c-font-medium" th:href="${hotNews.pageUrl}" target="_blank">
+            <span class="title-content-title" th:text="${stat.count}"></span>
+            <span class="title-content-title" th:text="${hotNews.title}"></span>
+            <span class="title-content-mark c-text" th:text="${hotNews.commentCount}"></span>
+        </a>
+    </li>
+    </ul>
+</body>
+</html>

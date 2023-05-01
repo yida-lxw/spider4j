@@ -5,11 +5,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
 
 @SpringBootApplication(scanBasePackages = {"com.yida.spider4j.crawler"})
+@EnableWebMvc
 @EnableScheduling
 public class Application {
     private static final Logger log = LoggerFactory.getLogger(Application.class);

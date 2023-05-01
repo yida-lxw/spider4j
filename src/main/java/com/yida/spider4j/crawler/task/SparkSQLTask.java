@@ -12,7 +12,7 @@ public class SparkSQLTask {
     private static final Logger log = LoggerFactory.getLogger(SparkSQLTask.class);
 
     @Async("sparkSQLThreadPool")
-    @Scheduled(cron="0 0/10 * * * ?")
+    @Scheduled(cron="0 0/2 * * * ?")
     public void spiderScheduleTask() {
         log.info("开始抓取网易新闻[每间隔10分钟自动抓取]");
         DBApp.start();

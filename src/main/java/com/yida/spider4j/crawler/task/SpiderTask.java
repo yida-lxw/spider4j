@@ -12,7 +12,7 @@ public class SpiderTask {
     private static final Logger log = LoggerFactory.getLogger(SpiderTask.class);
 
     @Async("spiderThreadPool")
-    @Scheduled(cron="0 0/5 * * * ?")
+    @Scheduled(cron="0 0/2 * * * ?")
     public void spiderScheduleTask() {
         log.info("开始抓取网易新闻[每间隔5分钟自动抓取]");
         WangyiSpider.run();
