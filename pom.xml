@@ -21,7 +21,8 @@
         <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
         <maven-javadoc-plugin.version>3.4.1</maven-javadoc-plugin.version>
         <maven-gpg-plugin.version>3.0.1</maven-gpg-plugin.version>
-
+        <spring.version>5.3.26</spring.version>
+        <spring.boot.version>2.7.10</spring.boot.version>
         <jsoup.version>1.15.3</jsoup.version>
         <htmlunit.version>2.65.1</htmlunit.version>
         <selenium-java.version>4.5.0</selenium-java.version>
@@ -33,15 +34,11 @@
 
     <repositories>
         <repository>
-            <id>central</id>
-            <name>aliyun maven</name>
-            <url>http://maven.aliyun.com/nexus/content/groups/public/</url>
-            <layout>default</layout>
-            <!-- 是否开启发布版构件下载 -->
+            <id>spring</id>
+            <url>https://maven.aliyun.com/repository/spring</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
-            <!-- 是否开启快照版构件下载 -->
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
@@ -49,6 +46,37 @@
     </repositories>
 
     <dependencies>
+        <!-- Spring 5.x -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+
+        <!-- Spring Boot 2.x -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+            <version>${spring.boot.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <version>${spring.boot.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <version>${spring.boot.version}</version>
+            <optional>true</optional>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_2.13</artifactId>
@@ -97,6 +125,12 @@
             <groupId>commons-dbutils</groupId>
             <artifactId>commons-dbutils</artifactId>
             <version>1.7</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>2.13.0</version>
         </dependency>
 
         <dependency>

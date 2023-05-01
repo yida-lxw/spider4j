@@ -22,6 +22,10 @@ import static org.apache.spark.sql.functions.monotonically_increasing_id;
 
 public class DBApp {
     public static void main(String[] args) {
+        start();
+    }
+
+    public static void start() {
         SparkConf conf = new SparkConf().setMaster("local").setAppName("MySparkSQL");
         JavaSparkContext sparkContext = new JavaSparkContext(conf);
         SparkSession sparkSession = SparkSession.builder()

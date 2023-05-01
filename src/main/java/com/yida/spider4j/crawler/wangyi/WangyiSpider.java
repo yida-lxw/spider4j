@@ -1,14 +1,14 @@
-package com.yida.spider4j.crawler.test.wangyi;
+package com.yida.spider4j.crawler.wangyi;
 
 import com.yida.spider4j.crawler.core.Spider;
 import com.yida.spider4j.crawler.pipeline.ConsolePipeline;
 import com.yida.spider4j.crawler.processor.param.AttachedPageProcessorParam;
 import com.yida.spider4j.crawler.processor.param.DetailPageProcessorParam;
 import com.yida.spider4j.crawler.processor.param.MultiPageProcessorParam;
-import com.yida.spider4j.crawler.test.wangyi.pageprocessor.WangyiAttachedPageProcessor;
-import com.yida.spider4j.crawler.test.wangyi.pageprocessor.WangyiDetailPageProcessor;
-import com.yida.spider4j.crawler.test.wangyi.pageprocessor.WangyiListPageProcessor;
-import com.yida.spider4j.crawler.test.wangyi.pageprocessor.WangyiStartPageProcessor;
+import com.yida.spider4j.crawler.wangyi.pageprocessor.WangyiAttachedPageProcessor;
+import com.yida.spider4j.crawler.wangyi.pageprocessor.WangyiDetailPageProcessor;
+import com.yida.spider4j.crawler.wangyi.pageprocessor.WangyiListPageProcessor;
+import com.yida.spider4j.crawler.wangyi.pageprocessor.WangyiStartPageProcessor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,7 +28,7 @@ public class WangyiSpider {
 
 	}
 
-	private static void run() {
+	public static void run() {
 		Map<String, String> headerMap = new HashMap<>();
 		headerMap.put("accept-language", "zh-CN,zh;q=0.9,en;q=0.8");
 		headerMap.put("cache-control", "max-age=0");
