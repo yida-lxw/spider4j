@@ -17,7 +17,13 @@ public class IndexController {
     @GetMapping("/index")
     public String index(Model model) {
         List<HotNews> hotNewsList = hotNewsService.getTopNHotNews();
+        List<HotNews> hotNewsYearList = hotNewsService.getTopNHotNewsOfYear();
+        List<HotNews> hotNewsMonthList = hotNewsService.getTopNHotNewsOfMonth();
+        List<HotNews> hotNewsDayList = hotNewsService.getTopNHotNewsOfDay();
         model.addAttribute("hotNewsList", hotNewsList);
+        model.addAttribute("hotNewsYearList", hotNewsYearList);
+        model.addAttribute("hotNewsMonthList", hotNewsMonthList);
+        model.addAttribute("hotNewsDayList", hotNewsDayList);
         return "index";
     }
 }

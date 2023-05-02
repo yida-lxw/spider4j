@@ -1,5 +1,6 @@
 package com.yida.spider4j.crawler.spark;
 
+import com.yida.spider4j.crawler.utils.common.DateUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -11,10 +12,14 @@ import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
 public class DBApp {
+    /**MySQL登录密码*/
+    public static final String MYSQL_PASSWORD = "1111";
+
     public static void main(String[] args) {
         start();
     }
@@ -29,7 +34,7 @@ public class DBApp {
         // 读取MySQL表中的数据，创建DataFrame对象
         String url = "jdbc:mysql://localhost:3306/spider?allowMultiQueries=true&useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai";
         String user = "root";
-        String password = "1111";
+        String password = MYSQL_PASSWORD;
         String dbName = "spider";
         String tableName = "news";
         Dataset<Row> df = sparkSession.read()
@@ -67,16 +72,58 @@ public class DBApp {
         result2.show();
         write2MySQL(result2.toJavaRDD(), "news_all_stat", sqlContext);
 
-        // 需求3：按照channel分组，每组内按commentCount降序排序，取每组的top 5
+        Date date = new Date(System.currentTimeMillis());
+        int year = DateUtils.getYear(date);
+        int month = DateUtils.getMonth(date);
+        int day = DateUtils.getDayOfMonth(date);
+        String[] yearRange = DateUtils.rangeYear(year);
+        // 需求3：先按照年度起止时间过滤，再按commentCount降序排序，取top 10
         String sql3 = "SELECT pageId, media, channel, title, commentCount,pageUrl FROM ("
+                + "   SELECT pageId, media, channel, title, commentCount,pageUrl,"
+                + "          ROW_NUMBER() OVER (ORDER BY commentCount DESC) AS rank"
+                + "   FROM news where publishDate >= '#start' and publishDate <= '#end'"
+                + ") tmp WHERE rank <= 10";
+        sql3 = sql3.replace("#start", yearRange[0]).replace("#end", yearRange[1]);
+        Dataset<Row> result3 = sparkSession.sql(sql3);
+        result3.show();
+        write2MySQL(result3.toJavaRDD(), "news_year_stat", sqlContext);
+
+        String[] monthRange = DateUtils.rangeYearMonth(year, month);
+        // 需求4：先按照月度起止时间过滤，再按commentCount降序排序，取top 10
+        String sql4 = "SELECT pageId, media, channel, title, commentCount,pageUrl FROM ("
+                + "   SELECT pageId, media, channel, title, commentCount,pageUrl,"
+                + "          ROW_NUMBER() OVER (ORDER BY commentCount DESC) AS rank"
+                + "   FROM news where publishDate >= '#start' and publishDate <= '#end'"
+                + ") tmp WHERE rank <= 10";
+        sql4 = sql4.replace("#start", monthRange[0]).replace("#end", monthRange[1]);
+        Dataset<Row> result4 = sparkSession.sql(sql4);
+        result4.show();
+        write2MySQL(result4.toJavaRDD(), "news_month_stat", sqlContext);
+
+
+        String[] dayRange = DateUtils.rangeYearMonthDay(year, month, day);
+        // 需求5：先按照月度起止时间过滤，再按commentCount降序排序，取top 10
+        String sql5 = "SELECT pageId, media, channel, title, commentCount,pageUrl FROM ("
+                + "   SELECT pageId, media, channel, title, commentCount,pageUrl,"
+                + "          ROW_NUMBER() OVER (ORDER BY commentCount DESC) AS rank"
+                + "   FROM news where publishDate >= '#start' and publishDate <= '#end'"
+                + ") tmp WHERE rank <= 10";
+        sql5 = sql5.replace("#start", dayRange[0]).replace("#end", dayRange[1]);
+        Dataset<Row> result5 = sparkSession.sql(sql5);
+        result5.show();
+        write2MySQL(result5.toJavaRDD(), "news_day_stat", sqlContext);
+
+
+        // 需求6：按照channel分组，每组内按commentCount降序排序，取每组的top 5
+        String sql6 = "SELECT pageId, media, channel, title, commentCount,pageUrl FROM ("
                 + "   SELECT pageId, media, channel, title, commentCount,pageUrl,"
                 + "          ROW_NUMBER() OVER (PARTITION BY channel ORDER BY commentCount DESC) AS rank"
                 + "   FROM news"
                 + ") tmp WHERE rank <= 5";
 
-        Dataset<Row> result3 = sparkSession.sql(sql3);
-        result3.show();
-        write2MySQL(result3.toJavaRDD(), "news_channel_stat", sqlContext);
+        Dataset<Row> result6 = sparkSession.sql(sql6);
+        result6.show();
+        write2MySQL(result6.toJavaRDD(), "news_channel_stat", sqlContext);
         sparkContext.close();
     }
 
@@ -88,7 +135,7 @@ public class DBApp {
     private static void write2MySQL(JavaRDD<Row> javaRowRDD, String tableName, SQLContext sqlContext) {
         String url = "jdbc:mysql://localhost:3306/spider?allowMultiQueries=true&useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai";
         String userName = "root";
-        String password = "1111";
+        String password = MYSQL_PASSWORD;
         String driverClass = "org.gjt.mm.mysql.Driver";
         // 数据库连接
         Properties connProperties = new Properties();

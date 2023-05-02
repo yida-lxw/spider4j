@@ -5,15 +5,95 @@
     <title>每日热点榜</title>
 </head>
 <body>
-<span>每日热点榜</span>
-<ul class="s-news-rank-content">
-    <li class="news-meta-item clearfix" th:each="hotNews,stat:${hotNewsList}">
-        <a class="title-content c-link c-font-medium" th:href="${hotNews.pageUrl}" target="_blank">
-            <span class="title-content-title" th:text="${stat.count}"></span>
-            <span class="title-content-title" th:text="${hotNews.title}"></span>
-            <span class="title-content-mark c-text" th:text="${hotNews.commentCount}"></span>
-        </a>
-    </li>
+<style type="text/css">
+    ul {
+        display: block;
+        list-style-type: disc;
+        margin-inline-start: 0px;
+        margin-inline-end: 0px;
+        padding-left: 0;
+        padding-right: 10px;
+    }
+    li {
+        list-style: none;
+        display: list-item;
+        text-align: -webkit-match-parent;
+    }
+    li a {
+        text-decoration: none;
+        color: inherit;
+    }
+    a:hover {
+        text-decoration: underline;
+        color: blue;
+    }
+    .title-content {
+        float: left;
+        height: 36px;
+        line-height: 36px;
+        width: 430px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .title-content .title-content-title {
+        font-size: 14px;
+        height: 16px;
+        line-height: 36px;
+    }
+</style>
+
+<div style="display:inline-block;float:left;">
+    <span>热点总榜</span>
+    <ul>
+        <li th:each="hotNews,stat:${hotNewsList}">
+            <a class="title-content" th:href="${hotNews.pageUrl}" target="_blank">
+                <span class="title-content-title" th:text="${stat.count}"></span>
+                <span class="title-content-title" th:text="${hotNews.title}"></span>
+                <span class="title-content-title" th:text="${hotNews.commentCount}"></span>
+            </a>
+        </li>
     </ul>
+</div>
+
+<div style="display:inline-block;float:left;">
+    <span>年度热点榜</span>
+    <ul>
+        <li th:each="hotNews,stat:${hotNewsYearList}">
+            <a class="title-content" th:href="${hotNews.pageUrl}" target="_blank">
+                <span class="title-content-title" th:text="${stat.count}"></span>
+                <span class="title-content-title" th:text="${hotNews.title}"></span>
+                <span class="title-content-title" th:text="${hotNews.commentCount}"></span>
+            </a>
+        </li>
+    </ul>
+</div>
+
+<div style="display:inline-block;float:left;">
+    <span>月度热点榜</span>
+    <ul>
+        <li th:each="hotNews,stat:${hotNewsMonthList}">
+            <a class="title-content" th:href="${hotNews.pageUrl}" target="_blank">
+                <span class="title-content-title" th:text="${stat.count}"></span>
+                <span class="title-content-title" th:text="${hotNews.title}"></span>
+                <span class="title-content-title" th:text="${hotNews.commentCount}"></span>
+            </a>
+        </li>
+    </ul>
+</div>
+
+<div th:if="${not #lists.isEmpty(hotNewsDayList)}" style="display:inline-block;float:left;">
+    <span>每日热点榜</span>
+    <ul>
+        <li th:each="hotNews,stat:${hotNewsDayList}">
+            <a class="title-content" th:href="${hotNews.pageUrl}" target="_blank">
+                <span class="title-content-title" th:text="${stat.count}"></span>
+                <span class="title-content-title" th:text="${hotNews.title}"></span>
+                <span class="title-content-title" th:text="${hotNews.commentCount}"></span>
+            </a>
+        </li>
+    </ul>
+</div>
+
 </body>
 </html>
